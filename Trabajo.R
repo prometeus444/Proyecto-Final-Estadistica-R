@@ -4,16 +4,16 @@ simulacion <- function(n, distri, datos) {
   
 # Elegir la distribución que queramos ("normal", "exponencial", "de la t" y "logarítmica")
   
-  if (datos == "normal") {  
+  if (datos == 1) {  
     datos1 <- rnorm (n)
     datos2 <- rnorm (n, distri, 1)
-  } else if (datos == "exponencial") {
+  } else if (datos == 2) {
     datos1 <- rexp (n)
     datos2 <- rexp (n) + distri
-  } else if (datos == "distribucion_t") {
+  } else if (datos == 3) {
     datos1 <- rt (n, df = 3)
     datos2 <- rt (n, df = 3) + distri
-  } else if (datos == "logaritmica") {
+  } else if (datos == 4) {
     datos1 <- rlnorm (n, 0, 1)
     datos2 <- rlnorm (n, meanlog = distri, 1)
   }  
@@ -41,7 +41,7 @@ simulacion <- function(n, distri, datos) {
 
 ## Función que ejecuta la función anterior 10000 veces
 
-repeticiones <- function (n, delta = 0, distribucion = "normal") {
+repeticiones <- function (n, delta = 0, distribucion = 1) {
   
   resultados <- replicate (10000, simulacion (n, delta, distribucion))
   
@@ -51,3 +51,35 @@ repeticiones <- function (n, delta = 0, distribucion = "normal") {
   
   return(medias)
 }
+
+## Función para iniciar el script
+
+inicio <- function() {
+  
+  datos <- as.numeric (readline("¿Cuántos datos por set quieres en tus simulaciones? "))
+  distribucion <- menu ()
+  delta <- as.numeric (readline("Indica el número del delta "))
+  
+  repeticiones (datos, delta ,distribucion)
+}
+
+## Función qué sirve como menú para elegir la distribución
+
+menu <- function() {
+  
+  # Se muestran las opciones
+  
+  cat ("¿Qué distribución quieres?\n")
+  cat ("1 - Normal\n")
+  cat ("2 - Exponencial\n")
+  cat ("3 - de la T con 3 grados de libertad\n")
+  cat ("4 - Logarítmica\n")
+  
+  # Se elige la opción
+  
+  opcion <- as.integer ((readline ("¿Qué opción quieres? ")))
+  
+  return(opcion)
+}
+
+inicio ()

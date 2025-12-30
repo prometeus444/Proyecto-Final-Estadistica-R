@@ -22,17 +22,20 @@ simulacion <- function(n, distri, datos) {
   
   p_t <- t.test (datos1, datos2)$p.value
   p_wil <- wilcox.test (datos1, datos2)$p.value
-  p_norm <- shapiro.test(c(datos1, datos2))$p.value
+  p_norm_1 <- shapiro.test(datos1)$p.value
+  p_norm_2 <- shapiro.test(datos2)$p.value
   
   # Devuelve TRUE si el p valor es mayor de 0.05  
   
-  if (p_norm > 0.05) {
+  if (p_norm_1 > 0.05 && p_norm_2 > 0.05) {
     p_final <- p_t
+    seleccion <- 1
   } else {
     p_final <- p_wil
+    seleccion <- 0
   }
   
-  resultado <- c (test_t = p_t < 0.05, test_wil = p_wil < 0.05, perverso = p_final < 0.05)
+  resultado <- c (test_t = p_t < 0.05, test_wil = p_wil < 0.05, perverso = p_final < 0.05, hizo_t <- seleccion)
   
   # Da como resultado 3 columnas con TRUE o FALSE dependiendo del p-valor
   
@@ -49,7 +52,10 @@ repeticiones <- function (n, delta = 0, distribucion = 1) {
   
   # Te da el error tipo I si delta = 0 o la potencia de cada test si deslta no es 0
   
-  return(medias)
+  elegir_t <- sum (resultados[4, ])
+  elegir_wil <- 10000 - elegir_t
+  
+  return(list(medias [1:3], elegir_t, elegir_wil))
 }
 
 ## Función para iniciar el script

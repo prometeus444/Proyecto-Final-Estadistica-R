@@ -1,12 +1,12 @@
 ## Función que simule un set de datos con diferentes distribuciones
 
-simulacion <- function(n, distri, datos) {
+simulacion <- function(n, distri, datos, varianza) {
   
 # Elegir la distribución que queramos ("normal", "exponencial", "de la t" y "logarítmica")
   
   if (datos == 1) {  
-    datos1 <- rnorm (n)
-    datos2 <- rnorm (n, distri, 1)
+    datos1 <- rnorm (n, 0, varianza)
+    datos2 <- rnorm (n, distri, varianza)
   } else if (datos == 2) {
     datos1 <- rexp (n)
     datos2 <- rexp (n) + distri
@@ -14,8 +14,8 @@ simulacion <- function(n, distri, datos) {
     datos1 <- rt (n, df = 3)
     datos2 <- rt (n, df = 3) + distri
   } else if (datos == 4) {
-    datos1 <- rlnorm (n, 0, 1)
-    datos2 <- rlnorm (n, meanlog = distri, 1)
+    datos1 <- rlnorm (n, 0, sdlog = varianza)
+    datos2 <- rlnorm (n, meanlog = distri, 1, sdlog = varianza)
   }  
   
   # Los p valores de cada test (test de la T, Wilcoxon y de normalidad)
@@ -44,9 +44,9 @@ simulacion <- function(n, distri, datos) {
 
 ## Función que ejecuta la función anterior 10000 veces
 
-repeticiones <- function (n, delta = 0, distribucion = 1) {
+repeticiones <- function (n, delta = 0, distribucion = 1, varianza) {
   
-  resultados <- replicate (10000, simulacion (n, delta, distribucion))
+  resultados <- replicate (10000, simulacion (n, delta, distribucion, varianza))
   
   medias <- rowMeans(resultados)
   
@@ -63,15 +63,16 @@ repeticiones <- function (n, delta = 0, distribucion = 1) {
 inicio <- function() {
   
   datos <- as.numeric (readline("¿Cuántos datos por set quieres en tus simulaciones? "))
-  distribucion <- menu ()
+  distribucion <- menu_distribucion ()
   delta <- as.numeric (readline("Indica el número del delta "))
+  varianza <- menu_varianza ()
   
-  repeticiones (datos, delta ,distribucion)
+  repeticiones (datos, delta ,distribucion, varianza)
 }
 
 ## Función qué sirve como menú para elegir la distribución
 
-menu <- function() {
+menu_distribucion <- function() {
   
   # Se muestran las opciones
   
@@ -86,6 +87,20 @@ menu <- function() {
   opcion <- as.integer ((readline ("¿Qué opción quieres? ")))
   
   return(opcion)
+}
+
+## Igual pero para cambiar la varianza
+
+menu_varianza <- function() {
+  opcion <- readline("¿Quieres cambiar la varianza?\ny/n\n")
+  
+  if (opcion == "y") {
+    vari <- as.numeric (readline("Valor de la varianza "))
+  } else {
+    vari <- 1 # Si se dice que no, varianza = 1
+  }
+  
+  return(vari)
 }
 
 inicio ()

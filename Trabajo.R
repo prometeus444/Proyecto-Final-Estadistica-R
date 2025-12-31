@@ -104,3 +104,107 @@ menu_varianza <- function() {
 }
 
 inicio ()
+
+
+
+####CODIGO ACTUALIZADO:
+
+#FUNCION DE SIMULACION CORREGIDA
+#Distribuciones no centradas.
+
+
+
+simulacion <- function(n, delta, distribucion) {   #se cambia nombre de argumento a delta, para que refleje tamaño del efecto
+  if (distribucion == 1) {            # Normal
+    x <- rnorm(n, 0, 1)               # delta = 0 ambas muestras misma distribución
+    y <- rnorm(n, delta, 1)           # delta ≠ 0 diferencia clara de localizacion
+    
+  } else if (distribucion == 2) {     # Exponencial centrada
+    x <- rexp(n) - 1                  #se resta la media teorica (1) para que este centrada. Si no está centrada, aun con delta = 0  el error tipo I no es interpretable.
+    y <- rexp(n) - 1 + delta
+    
+  } else if (distribucion == 3) {     # t(df=3) escalada a varianza 1. hace comprarables tamaños de efecto entre distribuciones y evita que diferencias de escala influyan en la potencia.
+    x <- rt(n, 3) / sqrt(3)
+    y <- rt(n, 3) / sqrt(3) + delta
+    
+  } else if (distribucion == 4) {     # Log-normal centrada
+    x <- rlnorm(n, 0, 1) - exp(0.5)   # se resta la media teorica exp(0.5). Mismo razonamiento que en la exponencial
+    y <- rlnorm(n, 0, 1) - exp(0.5) + delta
+  }
+  
+  p_t <- t.test(x, y, var.equal = FALSE)$p.value   # antes se asumia varianzas iguales. Ahora Welch ( var.equal = FALSE). Mas robusto cuando varianzas difieren
+  p_w <- wilcox.test(x, y, exact = FALSE)$p.value
+  
+  p_norm_x <- shapiro.test(x)$p.value
+  p_norm_y <- shapiro.test(y)$p.value
+  
+  if (p_norm_x > 0.05 && p_norm_y > 0.05) {
+    p_p <- p_t
+    chose_t <- 1  # se indica explicitamente que se usó el t-test
+  } else {
+    p_p <- p_w
+    chose_t <- 0
+  }
+  
+  c(
+    t_test = p_t < 0.05,
+    wilcoxon = p_w < 0.05,
+    perverso = p_p < 0.05,
+    chose_t = chose_t
+  )
+}
+
+
+##REPETICIONES DE MONTE CARLO
+
+repeticiones <- function(n, delta, distribucion, B = 10000) {
+  
+  resultado <- replicate(B, simulacion(n, delta, distribucion))
+  colMeans(resultado)
+}
+
+
+#BUVLES DE TAMAÑOS MUESTRALES     
+
+ns <- c(10, 20, 50, 100)
+deltas <- c(0, 0.2, 0.5)
+distribuciones <- 1:4
+
+resultados <- data.frame()
+
+for (d in distribuciones) {    #se evita ejecucion interactiva para qie las simulaciones sean reproducibles y no se produzcan errores por interaccion manual
+  for (n in ns) {
+    for (delta in deltas) {
+      
+      tasas <- repeticiones(n, delta, d)
+      
+      resultados <- rbind(
+        resultados,
+        data.frame(
+          distribucion = d,
+          n = n,
+          delta = delta,
+          metodo = c("t_test", "wilcoxon", "perverso"),
+          tasa = tasas[1:3],
+          prob_elegir_t = tasas["chose_t"]
+        )
+      )
+    }
+  }
+}
+
+head(resultados)   #para mirar el objeto resultados. Aparece data.frame 
+nrow(resultados)    #COMPROBACIÓN IMPORTANTE. DEbe dar 144. 4 distribuciones*4n*3deltas*3metodos
+
+#ERROR TIPO I vs POTENCIA
+subset(resultados, delta == 0) # delta == 0. No hay diferencia real entre grupos. tasa = error tipo I empirico. (Valor "correcto": aprox 0,05)
+#Interpretación típica: “Bajo la hipótesis nula, el procedimiento perverso no mantiene siempre el nivel nominal del 5%, y su comportamiento depende del tamaño muestral y de la distribución.”
+
+subset(resultados, delta == 0.5) # detla > 0. Si hay diferencia real. tasa =potencia. Cuanto mayor, mejor
+# Interpretación típica:“Para un efecto moderado, el procedimiento perverso suele mostrar menor potencia que el mejor de los métodos fijos, debido a la selección basada en el test de normalidad.”
+
+subset(resultados, metodo == "perverso") #columna prob_elegir_t es fundamental para la discusion
+# interpretación: Valores cercanos a 1: casi siempre t test  ///////  Valores cercanos a 0: casi siempre Wilcoxon
+# Para n pequeño: prob_elegir_t alta //////Para n grande: prob_elegir_t baja (sobre todo en distribuciones no normales()
+# Conclusión típica: “El criterio de selección depende fuertemente del tamaño muestral, no solo de la forma de la distribución.”
+

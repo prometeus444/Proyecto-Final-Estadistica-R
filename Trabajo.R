@@ -164,7 +164,7 @@ repeticiones <- function(n, delta, distribucion, B = 10000) {
 }
 
 
-#BUVLES DE TAMAÑOS MUESTRALES     
+#BUCLES DE TAMAÑOS MUESTRALES     
 
 ns <- c(10, 20, 50, 100)
 deltas <- c(0, 0.2, 0.5)
@@ -172,7 +172,7 @@ distribuciones <- 1:4
 
 resultados <- data.frame()
 
-for (d in distribuciones) {    #se evita ejecucion interactiva para qie las simulaciones sean reproducibles y no se produzcan errores por interaccion manual
+for (d in distribuciones) {    #se evita ejecucion interactiva para qUe las simulaciones sean reproducibles y no se produzcan errores por interaccion manual
   for (n in ns) {
     for (delta in deltas) {
       
@@ -207,4 +207,3 @@ subset(resultados, metodo == "perverso") #columna prob_elegir_t es fundamental p
 # interpretación: Valores cercanos a 1: casi siempre t test  ///////  Valores cercanos a 0: casi siempre Wilcoxon
 # Para n pequeño: prob_elegir_t alta //////Para n grande: prob_elegir_t baja (sobre todo en distribuciones no normales()
 # Conclusión típica: “El criterio de selección depende fuertemente del tamaño muestral, no solo de la forma de la distribución.”
-

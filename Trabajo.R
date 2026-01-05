@@ -225,3 +225,44 @@ visualizar <- function(resultados) {
 }
 
 resultados <- inicio()
+
+library(ggplot2)
+
+# Gráfico 1: ERROR TIPO I (Cuando NO hay diferencias reales)
+# Ver si la línea del método perverso se pasa de la línea roja (0.05)
+
+g1 <- ggplot(subset(resultados, delta == 0), aes(x = factor(n), y = tasa, color = metodo, group = metodo)) +
+  geom_line(linewidth = 1) + 
+  geom_point(size = 3) +
+  # Línea roja de seguridad (0.05)
+  geom_hline(yintercept = 0.05, linetype = "dashed", color = "red") + 
+  facet_grid(. ~ distribucion, labeller = label_both) +
+  labs(
+    title = "Error Tipo I: Falsos Positivos",
+    subtitle = "Si el método pasa la línea roja, NO es fiable.",
+    y = "Tasa de Error",
+    x = "Tamaño de muestra (n)",
+    caption = "1=Normal, 2=Exp, 3=T-Student, 4=LogNorm, 5=Bimodal"
+  ) +
+  theme_bw()
+
+print(g1) # Muestra el primer gráfico
+
+
+# Gráfico 2: POTENCIA (Cuando SÍ hay diferencias reales)
+# Ver qué método detecta mejor las diferencias (cuanto más alto, mejor)
+
+g2 <- ggplot(subset(resultados, delta == 0.5), aes(x = factor(n), y = tasa, color = metodo, group = metodo)) +
+  geom_line(linewidth = 1) + 
+  geom_point(size = 3) +
+  facet_grid(. ~ distribucion, labeller = label_both) +
+  labs(
+    title = "Potencia Estadística",
+    subtitle = "¿Qué método detecta mejor las diferencias? (Más alto es mejor)",
+    y = "Potencia",
+    x = "Tamaño de muestra (n)",
+    caption = "Comparación con Delta = 0.5"
+  ) +
+  theme_bw()
+
+print(g2) # Muestra el segundo gráfico

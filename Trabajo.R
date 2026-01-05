@@ -226,9 +226,11 @@ visualizar <- function(resultados) {
 
 resultados <- inicio()
 
+##GRAFICOS
 
 library(ggplot2)
 
+##GRAFICO ERROR TIPO I
 nombres_dist <- c("1. Normal", "2. Exponencial", "3. T-Student", "4. Log-Normal", "5. Bimodal")
 
 print("Generando 5 gráficos individuales de Error Tipo I...")
@@ -239,7 +241,7 @@ for (i in 1:5) {
   # Filtramos: Solo la distribución 'i' y solo Delta=0 (Error Tipo I)
   datos_plot <- subset(resultados, distribucion == i & delta == 0)
   
-  # Creamos el gráfico
+  #Codigo que genera el grafico
   g <- ggplot(datos_plot, aes(x = factor(n), y = tasa, color = metodo, group = metodo)) +
     geom_line(linewidth = 1.2) +      
     geom_point(size = 3) +            
@@ -253,32 +255,32 @@ for (i in 1:5) {
     ) +
     theme_bw()
   
-  print(g) # Muestra el gráfico
+  print(g) 
   Sys.sleep(0.5) # Pausa pequeña para que R no se sature
 }
 
-#plots para Potencia
+#GRAFICO POTENCIA
 
 nombres_dist <- c("1. Normal", "2. Exponencial", "3. T-Student", "4. Log-Normal", "5. Bimodal")
 
 print("Generando 5 gráficos individuales de POTENCIA...")
 
 
-print(g2) # Muestra el segundo gráfico
+print(g2) 
 
 
 # Bucle para los 5 gráficos
 for (i in 1:5) {
   
-  # 1. Filtramos: Solo distribución 'i' y Delta = 0.5 (Esto es POTENCIA)
+  #Filtramos: Solo distribución 'i' y Delta = 0.5 (Esto es POTENCIA)
   datos_plot <- subset(resultados, distribucion == i & delta == 0.5)
   
-  # 2. Creamos el gráfico
+  #Codigo que genera el gráfico
   g <- ggplot(datos_plot, aes(x = factor(n), y = tasa, color = metodo, group = metodo)) +
     geom_line(linewidth = 1.2) +      
     geom_point(size = 3) +            
     
-    # Aquí NO hay línea roja de límite, porque cuanto más alto mejor
+    #Aquí NO hay línea roja de límite, porque cuanto más alto mejor
     facet_grid(. ~ varianza, labeller = label_both) +
     
     labs(
@@ -290,7 +292,8 @@ for (i in 1:5) {
     ) +
     theme_bw()
   
-  # 3. Definimos los nombres dentro del gráfico para que no falle
+  
+  #GRAFICO DE MOVIMIENTO DEL SELECTOR
   etiquetas_dist <- c("1.Normal", "2.Exp", "3.T-Std", "4.LogN", "5.Bimodal")
   
   g_selector <- ggplot(subset(resultados, delta == 0), aes(x = factor(n), y = prob_elegir_t, group = distribucion, color = factor(distribucion))) +

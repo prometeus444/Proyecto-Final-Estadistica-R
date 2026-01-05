@@ -171,7 +171,7 @@ inicio <- function() {
 # OUTPUTS - Data frame con los resultados de las diferentes simulaciones
 
 calculo_resultados <- function(distribuciones, ns, deltas, varianzas) {
-  
+    
   resultados <- data.frame()
   
   # Hacemos varios bucles para que haga todas las posibles simulaciones
@@ -229,42 +229,89 @@ resultados <- inicio()
 
 library(ggplot2)
 
-# Gráfico 1: ERROR TIPO I (Cuando NO hay diferencias reales)
-# Ver si la línea del método perverso se pasa de la línea roja (0.05)
+nombres_dist <- c("1. Normal", "2. Exponencial", "3. T-Student", "4. Log-Normal", "5. Bimodal")
 
-g1 <- ggplot(subset(resultados, delta == 0), aes(x = factor(n), y = tasa, color = metodo, group = metodo)) +
-  geom_line(linewidth = 1) + 
-  geom_point(size = 3) +
-  # Línea roja de seguridad (0.05)
-  geom_hline(yintercept = 0.05, linetype = "dashed", color = "red") + 
-  facet_grid(. ~ distribucion, labeller = label_both) +
-  labs(
-    title = "Error Tipo I: Falsos Positivos",
-    subtitle = "Si el método pasa la línea roja, NO es fiable.",
-    y = "Tasa de Error",
-    x = "Tamaño de muestra (n)",
-    caption = "1=Normal, 2=Exp, 3=T-Student, 4=LogNorm, 5=Bimodal"
-  ) +
-  theme_bw()
+print("Generando 5 gráficos individuales de Error Tipo I...")
 
-print(g1) # Muestra el primer gráfico
+# Bucle para generar los 5 gráficos
+for (i in 1:5) {
+  
+  # Filtramos: Solo la distribución 'i' y solo Delta=0 (Error Tipo I)
+  datos_plot <- subset(resultados, distribucion == i & delta == 0)
+  
+  # Creamos el gráfico
+  g <- ggplot(datos_plot, aes(x = factor(n), y = tasa, color = metodo, group = metodo)) +
+    geom_line(linewidth = 1.2) +      
+    geom_point(size = 3) +            
+    geom_hline(yintercept = 0.05, linetype = "dashed", color = "red", linewidth = 0.8) +
+    facet_grid(. ~ varianza, labeller = label_both) +
+    labs(
+      title = paste("Error Tipo I -", nombres_dist[i]),
+      subtitle = "Si la línea de color sube mucho, el método falla.",
+      y = "Tasa de Error (Límite 0.05)",
+      x = "Tamaño de muestra (n)"
+    ) +
+    theme_bw()
+  
+  print(g) # Muestra el gráfico
+  Sys.sleep(0.5) # Pausa pequeña para que R no se sature
+}
 
+#plots para Potencia
 
-# Gráfico 2: POTENCIA (Cuando SÍ hay diferencias reales)
-# Ver qué método detecta mejor las diferencias (cuanto más alto, mejor)
+nombres_dist <- c("1. Normal", "2. Exponencial", "3. T-Student", "4. Log-Normal", "5. Bimodal")
 
-g2 <- ggplot(subset(resultados, delta == 0.5), aes(x = factor(n), y = tasa, color = metodo, group = metodo)) +
-  geom_line(linewidth = 1) + 
-  geom_point(size = 3) +
-  facet_grid(. ~ distribucion, labeller = label_both) +
-  labs(
-    title = "Potencia Estadística",
-    subtitle = "¿Qué método detecta mejor las diferencias? (Más alto es mejor)",
-    y = "Potencia",
-    x = "Tamaño de muestra (n)",
-    caption = "Comparación con Delta = 0.5"
-  ) +
-  theme_bw()
+print("Generando 5 gráficos individuales de POTENCIA...")
+
 
 print(g2) # Muestra el segundo gráfico
+
+
+# Bucle para los 5 gráficos
+for (i in 1:5) {
+  
+  # 1. Filtramos: Solo distribución 'i' y Delta = 0.5 (Esto es POTENCIA)
+  datos_plot <- subset(resultados, distribucion == i & delta == 0.5)
+  
+  # 2. Creamos el gráfico
+  g <- ggplot(datos_plot, aes(x = factor(n), y = tasa, color = metodo, group = metodo)) +
+    geom_line(linewidth = 1.2) +      
+    geom_point(size = 3) +            
+    
+    # Aquí NO hay línea roja de límite, porque cuanto más alto mejor
+    facet_grid(. ~ varianza, labeller = label_both) +
+    
+    labs(
+      title = paste("Potencia -", nombres_dist[i]),
+      subtitle = "Capacidad de detectar diferencias (Más alto = Mejor)",
+      y = "Potencia (Probabilidad)",
+      x = "Tamaño de muestra (n)",
+      color = "Método"
+    ) +
+    theme_bw()
+  
+  # 3. Definimos los nombres dentro del gráfico para que no falle
+  etiquetas_dist <- c("1.Normal", "2.Exp", "3.T-Std", "4.LogN", "5.Bimodal")
+  
+  g_selector <- ggplot(subset(resultados, delta == 0), aes(x = factor(n), y = prob_elegir_t, group = distribucion, color = factor(distribucion))) +
+    geom_line(linewidth = 1.2) +
+    geom_point(size = 3) +
+    facet_grid(. ~ varianza, labeller = label_both) +
+    labs(
+      title = "Movimiento del Selector: ¿Cuándo usamos T-Student?",
+      subtitle = "Muestra la probabilidad de elegir el test paramétrico.",
+      y = "Probabilidad de elegir T-Test (1=Siempre, 0=Nunca)",
+      x = "Tamaño de muestra (n)",
+      color = "Distribución"
+    ) +
+    scale_color_manual(values = c("blue", "red", "green", "purple", "orange"),
+                       labels = etiquetas_dist) +
+    theme_bw()
+  
+  print(g_selector)
+  
+  
+  print(g)
+  Sys.sleep(0.5)
+}
 
